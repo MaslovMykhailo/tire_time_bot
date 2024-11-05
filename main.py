@@ -11,11 +11,13 @@ from dotenv import load_dotenv
 from chat import settings_router
 from location import NominatimAPI
 from weather_forecast import WeatherAPI
+from database import DBEngine
 
-load_dotenv()
+load_dotenv(override=True)
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+DB_URL = os.getenv("DB_URL")
 
 
 async def main() -> None:
@@ -24,10 +26,16 @@ async def main() -> None:
     location_api = NominatimAPI()
     weather_forecast_api = WeatherAPI(WEATHER_API_KEY)
 
-    dp = Dispatcher(location_api=location_api, weather_forecast_api=weather_forecast_api)
+    db_engine = DBEngine(DB_URL)
+    await db_engine.create_all()
+
+    dp = Dispatcher(
+        location_api=location_api, weather_forecast_api=weather_forecast_api, db_session=db_engine.get_db_session
+    )
     dp.include_router(settings_router)
 
     await dp.start_polling(bot)
+    await db_engine.dispose()
 
 
 if __name__ == "__main__":
