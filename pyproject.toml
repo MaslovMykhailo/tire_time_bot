@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "tire-time-bot"
+version = "0.1.0"
+description = "TireTimeBot"
+authors = ["Mykhailo Maslov <maslov.mikhail2000@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+aiogram = "^3.15.0"
+black = "^24.10.0"
+flake8 = "^7.1.1"
+httpx = "^0.28.1"
+python-dotenv = "^1.0.1"
+sqlalchemy = "^2.0.36"
+asyncpg = "^0.30.0"
+greenlet = "^3.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
