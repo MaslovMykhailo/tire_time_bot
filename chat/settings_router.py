@@ -6,11 +6,12 @@ from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKey
 
 from location import LocationAPI, parse_coordinates
 from weather_forecast import WeatherForecastAPI, get_tire_type_by_avg_temperature, get_opposite_tire_type
-from database import DBSession, Chat, Alert, getChatById, createOrUpdateChat
+from database import DBSession, Chat, Alert, get_chat_by_id, create_or_update_chat
 
 from .messages import ChatMessages
+from .helpers import get_chat_location
 
-settings_router = Router()
+settings_router = Router(name=__name__)
 
 
 class Settings(StatesGroup):
@@ -38,12 +39,12 @@ class Confirmation:
 async def command_start_handler(
     message: Message, state: FSMContext, messages: ChatMessages, location_api: LocationAPI, db_session: DBSession
 ) -> None:
-    chat = await getChatById(await db_session(), message.chat.id)
+    chat = await get_chat_by_id(await db_session(), message.chat.id)
 
     if chat is not None:
         await state.set_state(Settings.configure)
 
-        place_name = await location_api.get_place_name({"lat": chat.lat, "lon": chat.lon})
+        place_name = await location_api.get_place_name(get_chat_location(chat))
         await message.answer(
             messages.settings_start_configured_chat(place_name, chat.tire_type),
             reply_markup=ReplyKeyboardMarkup(
@@ -74,7 +75,7 @@ async def command_settings_handler(
 ) -> None:
     await state.set_state(Settings.configure)
 
-    chat = await getChatById(await db_session(), message.chat.id)
+    chat = await get_chat_by_id(await db_session(), message.chat.id)
 
     if chat is None:
         await message.answer(
@@ -85,7 +86,7 @@ async def command_settings_handler(
         )
         return
 
-    place_name = await location_api.get_place_name({"lat": chat.lat, "lon": chat.lon})
+    place_name = await location_api.get_place_name(get_chat_location(chat))
     await message.answer(
         messages.settings_overview(place_name, chat.tire_type),
         reply_markup=ReplyKeyboardMarkup(
@@ -241,9 +242,9 @@ async def process_tire_type_confirmation(
         lat=location["lat"],
         lon=location["lon"],
         tire_type=tire_type,
-        alerts=[Alert(chat_id=message.chat.id, type=tire_type, count=0)],
+        alert=Alert(chat_id=message.chat.id, type=tire_type, count=0),
     )
-    await createOrUpdateChat(await db_session(), chat)
+    await create_or_update_chat(await db_session(), chat)
 
     await state.clear()
     await message.answer(messages.settings_tire_type_set(tire_type), reply_markup=ReplyKeyboardRemove())

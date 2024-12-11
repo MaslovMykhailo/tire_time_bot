@@ -1,5 +1,3 @@
-from typing import List
-from typing import Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -36,7 +34,7 @@ class Chat(Base):
         1: "summer",
     }
 
-    alerts: Mapped[List["Alert"]] = relationship(back_populates="chat", lazy="selectin")
+    alert: Mapped["Alert"] = relationship(back_populates="chat", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"Chat(id={self.id!r}, [lat={self.latitude!r}, lon={self.fullname!r}])"
@@ -47,7 +45,7 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"))
-    chat: Mapped["Chat"] = relationship(back_populates="alerts", lazy="selectin")
+    chat: Mapped["Chat"] = relationship(back_populates="alert", lazy="selectin")
 
     type: Mapped[int] = mapped_column()
     formatted_type = {
@@ -55,7 +53,7 @@ class Alert(Base):
         1: "summer to winter",
     }
 
-    count: Mapped[Optional[int]] = mapped_column()
+    count: Mapped[int] = mapped_column()
 
     def __repr__(self) -> str:
         type = self.formatted_type[self.type]

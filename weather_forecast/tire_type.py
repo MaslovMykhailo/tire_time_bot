@@ -3,6 +3,11 @@ class TireType:
     Summer = 1
 
 
+class AlertType:
+    WinterToSummer = 0
+    SummerToWinter = 1
+
+
 def get_tire_type_by_avg_temperature(avg_temperature: float) -> int:
     return TireType.Winter if avg_temperature < 7 else TireType.Summer
 

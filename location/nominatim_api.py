@@ -29,8 +29,8 @@ class NominatimAPI(LocationAPI):
 
         location = data[0]
         return {
-            "lat": location["lat"],
-            "lon": location["lon"],
+            "lat": float(location["lat"]),
+            "lon": float(location["lon"]),
         }
 
     async def get_place_name(self, location: Location) -> str:

@@ -1,4 +1,4 @@
-from weather_forecast import TireType
+from weather_forecast import TireType, AlertType
 
 
 class ChatMessages:
@@ -74,3 +74,38 @@ class ChatMessages:
             f"Your tire type is set to {self.format_tire_type(tire_type)}.\n"
             "You will receive notifications when the weather changes and it's time to schedule changing your tires."
         )
+
+    def format_alert_type(self, alert_type: int):
+        return (
+            "from winter tires to summer" if alert_type == AlertType.WinterToSummer else "from summer tires to winter"
+        )
+
+    def alert_change_tire_type(
+        self,
+        alert_type: int,
+        alert_count: int,
+        avg_temperature: float | None = None,
+    ):
+        if alert_count == 0:
+            return (
+                "Hello!\n"
+                f"According weather forecast the average temperature is {avg_temperature:.1f}°C for next week."
+                f"It's a good time to schedule an appointment to change {self.format_alert_type(alert_type)}."
+            )
+
+        return (
+            "Hello again!\n"
+            f"You asked to remind you to schedule an appointment to change {self.format_alert_type(alert_type)}."
+        )
+
+    def alert_notify_stop_button(self):
+        return "Do not notify me again"
+
+    def alert_notify_again_button(self):
+        return "Notify me later again"
+
+    def alert_notify_stop_confirm(self):
+        return "Confirmed"
+
+    def alert_notify_again_confirm(self):
+        return "Confirmed"
