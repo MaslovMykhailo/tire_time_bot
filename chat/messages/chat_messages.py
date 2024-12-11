@@ -11,6 +11,25 @@ class ChatMessages:
     def settings_start(self):
         return "Hello!\n" f"{self.settings_location()}"
 
+    def settings_start_configured_chat(self, place_name: str, tire_type: int):
+        return "Hello!\n" f"{self.settings_overview(place_name, tire_type)}"
+
+    def settings_overview(self, place_name: str, tire_type: int):
+        return (
+            f"{self.settings_location_set(place_name)}\n"
+            f"{self.settings_tire_type_set(tire_type)}\n"
+            "You can change your settings at any time."
+        )
+
+    def settings_overview_not_configured_chat(self):
+        return "Settings are not configured yet."
+
+    def settings_configure_button(self):
+        return "Configure settings"
+
+    def settings_change_settings_keep_current(self):
+        return "Current settings are kept."
+
     def settings_location(self):
         return (
             "Please, select the way how you want to set your location:\n"
@@ -29,8 +48,11 @@ class ChatMessages:
     def settings_location_coordinates_invalid(self):
         return "Invalid coordinates, please, try again."
 
+    def settings_location_set(self, place_name: str):
+        return "Your location is set to:\n" f"{place_name}."
+
     def settings_location_confirmation(self, place_name: str):
-        return f"Your location is set to:\n{place_name}.\n" "Is it correct?"
+        return f"{self.settings_location_set()}\n" "Is it correct?"
 
     def format_tire_type(self, tire_type: int):
         return "winter" if tire_type == TireType.Winter else "summer"

@@ -1,12 +1,12 @@
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from location import LocationAPI, parse_coordinates
 from weather_forecast import WeatherForecastAPI, get_tire_type_by_avg_temperature, get_opposite_tire_type
-from database import DBSession, Chat
+from database import DBSession, Chat, getChatById
 
 from .messages import ChatMessages
 
@@ -14,9 +14,12 @@ settings_router = Router()
 
 
 class Settings(StatesGroup):
+    configure = State()
+
     location = State()
     coordinates_location = State()
     place_location = State()
+
     location_confirmation = State()
     tire_type_confirmation = State()
 
@@ -32,11 +35,75 @@ class Confirmation:
 
 
 @settings_router.message(CommandStart())
-async def command_start_handler(message: Message, state: FSMContext, messages: ChatMessages) -> None:
-    # TODO: check if the user already has location set
+async def command_start_handler(
+    message: Message, state: FSMContext, messages: ChatMessages, location_api: LocationAPI, db_session: DBSession
+) -> None:
+    chat = await getChatById(await db_session(), message.chat.id)
+
+    if chat is not None:
+        await state.set_state(Settings.configure)
+
+        place_name = await location_api.get_place_name({"lat": chat.lat, "lon": chat.lon})
+        await message.answer(
+            messages.settings_start_configured_chat(place_name, chat.tire_type),
+            reply_markup=ReplyKeyboardMarkup(
+                keyboard=[[KeyboardButton(text=messages.settings_configure_button())]], resize_keyboard=True
+            ),
+        )
+
+        return
+
     await state.set_state(Settings.location)
     await message.answer(
         messages.settings_start(),
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[
+                [
+                    KeyboardButton(text=LocationSettingType.Coordinates.capitalize()),
+                    KeyboardButton(text=LocationSettingType.Place.capitalize()),
+                ]
+            ],
+            resize_keyboard=True,
+        ),
+    )
+
+
+@settings_router.message(Command("settings"))
+async def command_settings_handler(
+    message: Message, state: FSMContext, messages: ChatMessages, location_api: LocationAPI, db_session: DBSession
+) -> None:
+    await state.set_state(Settings.configure)
+
+    chat = await getChatById(await db_session(), message.chat.id)
+
+    if chat is None:
+        await message.answer(
+            messages.settings_overview_not_configured_chat(),
+            reply_markup=ReplyKeyboardMarkup(
+                keyboard=[[KeyboardButton(text=messages.settings_configure_button())]], resize_keyboard=True
+            ),
+        )
+        return
+
+    place_name = await location_api.get_place_name({"lat": chat.lat, "lon": chat.lon})
+    await message.answer(
+        messages.settings_overview(place_name, chat.tire_type),
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=messages.settings_configure_button())]], resize_keyboard=True
+        ),
+    )
+
+
+@settings_router.message(Settings.configure)
+async def process_configure_settings(message: Message, state: FSMContext, messages: ChatMessages) -> None:
+    if not message.text.casefold() == messages.settings_configure_button().casefold():
+        await state.clear()
+        await message.answer(messages.settings_change_settings_keep_current(), reply_markup=ReplyKeyboardRemove())
+        return
+
+    await state.set_state(Settings.location)
+    await message.answer(
+        messages.settings_location(),
         reply_markup=ReplyKeyboardMarkup(
             keyboard=[
                 [
