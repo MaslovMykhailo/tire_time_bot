@@ -13,10 +13,15 @@ def parse_coordinates(raw: str) -> Location | None:
     - dms: "dd°mm'ss"[N|S] dd°mm'ss"[E|W]"
     """
     try:
-        if any(c in directions for c in raw.upper()):
+        decimal_pattern = r"(\d+\.\d+)[, ](\d+\.\d+)"
+        if not re.search(decimal_pattern, raw) is None:
+            return parse_decimal_coordinates(raw)
+
+        dms_pattern = r"(\d+°\d+'\d+\"[NSEW]) (\d+°\d+'\d+\"[NSEW])"
+        if not re.search(dms_pattern, raw) is None:
             return parse_degrees_coordinates(raw)
 
-        return parse_decimal_coordinates(raw)
+        return None
     except ValueError:
         return None
 

@@ -132,11 +132,12 @@ async def process_coordinates_location(
 ) -> None:
     raw_coordinates = message.text.strip()
     location = parse_coordinates(raw_coordinates)
-    place_name = await location_api.get_place_name(location)
 
-    if location is None or place_name is None:
+    if location is None:
         await message.answer(messages.settings_location_coordinates_invalid())
         return
+
+    place_name = await location_api.get_place_name(location)
 
     await state.update_data(location=location)
     await state.set_state(Settings.location_confirmation)
