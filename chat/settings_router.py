@@ -6,7 +6,7 @@ from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKey
 
 from location import LocationAPI, parse_coordinates
 from weather_forecast import WeatherForecastAPI, get_tire_type_by_avg_temperature, get_opposite_tire_type
-from database import DBSession, Chat, getChatById
+from database import DBSession, Chat, Alert, getChatById, createOrUpdateChat
 
 from .messages import ChatMessages
 
@@ -151,14 +151,38 @@ async def process_coordinates_location(
     )
 
 
-# TODO: implement the place location setting
-# @settings_router.message(Settings.location, F.text.casefold() == LocationSettingType.Place)
-# async def process_location_with_place(message: Message, state: FSMContext) -> None:
-#     await state.set_state(Settings.place_location)
-#     await message.answer(
-#         "Enter the name of the settlement",
-#         reply_markup=ReplyKeyboardRemove(),
-#     )
+@settings_router.message(Settings.location, F.text.casefold() == LocationSettingType.Place)
+async def process_location_with_place(message: Message, state: FSMContext, messages: ChatMessages) -> None:
+    await state.set_state(Settings.place_location)
+    await message.answer(
+        messages.settings_location_place(),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+
+@settings_router.message(Settings.place_location)
+async def process_place_location(
+    message: Message, state: FSMContext, messages: ChatMessages, location_api: LocationAPI
+) -> None:
+    location = await location_api.search(message.text.strip())
+
+    if location is None:
+        await message.answer(messages.settings_location_place_not_found(), reply_markup=ReplyKeyboardRemove())
+        return
+
+    await state.update_data(location=location)
+    await state.set_state(Settings.location_confirmation)
+
+    place_name = await location_api.get_place_name(location)
+    await message.answer(
+        messages.settings_location_confirmation(place_name),
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text=Confirmation.Yes.capitalize()), KeyboardButton(text=Confirmation.No.capitalize())]
+            ],
+            resize_keyboard=True,
+        ),
+    )
 
 
 @settings_router.message(Settings.location_confirmation, F.text.casefold() == Confirmation.Yes)
@@ -182,7 +206,7 @@ async def process_location_confirmation_agreement(
     )
 
 
-@settings_router.message(Settings.location_confirmation, F.text.casefold() == Confirmation.No)
+@settings_router.message(Settings.location_confirmation)
 async def process_location_confirmation_disagreement(
     message: Message, state: FSMContext, messages: ChatMessages
 ) -> None:
@@ -201,7 +225,7 @@ async def process_location_confirmation_disagreement(
     )
 
 
-@settings_router.message(Settings.tire_type_confirmation, F.text.casefold() == Confirmation.Yes)
+@settings_router.message(Settings.tire_type_confirmation)
 async def process_tire_type_confirmation(
     message: Message, state: FSMContext, messages: ChatMessages, db_session: DBSession
 ) -> None:
@@ -212,12 +236,14 @@ async def process_tire_type_confirmation(
     if message.text.casefold() == Confirmation.No:
         tire_type = get_opposite_tire_type(tire_type)
 
-    async_session = await db_session()
-    async with async_session() as session:
-        async with session.begin():
-            # TODO: handle the case when the chat already exists
-            session.add(
-                Chat(id=message.chat.id, lat=location["lat"], lon=location["lon"], tire_type=tire_type, alerts=[])
-            )
+    chat = Chat(
+        id=message.chat.id,
+        lat=location["lat"],
+        lon=location["lon"],
+        tire_type=tire_type,
+        alerts=[Alert(chat_id=message.chat.id, type=tire_type, count=0)],
+    )
+    await createOrUpdateChat(await db_session(), chat)
 
+    await state.clear()
     await message.answer(messages.settings_tire_type_set(tire_type), reply_markup=ReplyKeyboardRemove())

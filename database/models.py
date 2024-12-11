@@ -36,7 +36,7 @@ class Chat(Base):
         1: "summer",
     }
 
-    alerts: Mapped[List["Alert"]] = relationship(back_populates="chat")
+    alerts: Mapped[List["Alert"]] = relationship(back_populates="chat", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"Chat(id={self.id!r}, [lat={self.latitude!r}, lon={self.fullname!r}])"
@@ -47,7 +47,7 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"))
-    chat: Mapped["Chat"] = relationship(back_populates="alerts")
+    chat: Mapped["Chat"] = relationship(back_populates="alerts", lazy="selectin")
 
     type: Mapped[int] = mapped_column()
     formatted_type = {

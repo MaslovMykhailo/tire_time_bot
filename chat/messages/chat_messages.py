@@ -48,11 +48,17 @@ class ChatMessages:
     def settings_location_coordinates_invalid(self):
         return "Invalid coordinates, please, try again."
 
+    def settings_location_place(self):
+        return "Enter the name of a settlement."
+
+    def settings_location_place_not_found(self):
+        return "The settlement is not found, please, try again."
+
     def settings_location_set(self, place_name: str):
         return "Your location is set to:\n" f"{place_name}."
 
     def settings_location_confirmation(self, place_name: str):
-        return f"{self.settings_location_set()}\n" "Is it correct?"
+        return f"{self.settings_location_set(place_name)}\n" "Is it correct?"
 
     def format_tire_type(self, tire_type: int):
         return "winter" if tire_type == TireType.Winter else "summer"
