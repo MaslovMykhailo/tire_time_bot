@@ -4,11 +4,13 @@ import os
 import sys
 
 from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
-from chat import settings_router, alert_router, ChatMessages
+from chat import settings_router, alert_router, ChatMessages, check_for_alerts_factory
 from location import NominatimAPI
 from weather_forecast import WeatherAPI
 from database import DBEngine
@@ -20,10 +22,11 @@ WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 DB_URL = os.getenv("DB_URL")
 
 
-async def task(check_for_alerts):
-    while True:
-        await check_for_alerts()
-        await asyncio.sleep(60)
+def start_alerts_scheduler(check_for_alerts):
+    scheduler = AsyncIOScheduler()
+    # Schedule the job to run daily at 9:00 AM
+    scheduler.add_job(check_for_alerts, CronTrigger(hour=9, minute=0))
+    scheduler.start()
 
 
 async def main() -> None:
@@ -44,6 +47,15 @@ async def main() -> None:
     )
     dp.include_router(settings_router)
     dp.include_router(alert_router)
+
+    start_alerts_scheduler(
+        check_for_alerts_factory(
+            bot,
+            messages,
+            weather_forecast_api,
+            db_session=db_engine.get_db_session,
+        )
+    )
 
     await dp.start_polling(bot)
     await db_engine.dispose()
