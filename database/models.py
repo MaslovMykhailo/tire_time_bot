@@ -47,7 +47,7 @@ class Alert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey("chat.id"))
-    chat: Mapped["Chat"] = relationship(back_populates="alert")
+    chat: Mapped["Chat"] = relationship(back_populates="alerts")
 
     type: Mapped[int] = mapped_column()
     formatted_type = {

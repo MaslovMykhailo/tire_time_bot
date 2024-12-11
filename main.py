@@ -8,7 +8,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
-from chat import settings_router
+from chat import settings_router, ChatMessages
 from location import NominatimAPI
 from weather_forecast import WeatherAPI
 from database import DBEngine
@@ -23,6 +23,7 @@ DB_URL = os.getenv("DB_URL")
 async def main() -> None:
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
+    messages = ChatMessages()
     location_api = NominatimAPI()
     weather_forecast_api = WeatherAPI(WEATHER_API_KEY)
 
@@ -30,7 +31,10 @@ async def main() -> None:
     await db_engine.create_all()
 
     dp = Dispatcher(
-        location_api=location_api, weather_forecast_api=weather_forecast_api, db_session=db_engine.get_db_session
+        location_api=location_api,
+        weather_forecast_api=weather_forecast_api,
+        db_session=db_engine.get_db_session,
+        messages=messages,
     )
     dp.include_router(settings_router)
 

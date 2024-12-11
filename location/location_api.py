@@ -9,5 +9,9 @@ class Location(TypedDict):
 
 class LocationAPI(ABC):
     @abstractmethod
-    async def search(self, search_term: str) -> Location:
+    async def search(self, search_term: str) -> Location | None:
+        pass
+
+    @abstractmethod
+    async def get_place_name(self, location: Location) -> str | None:
         pass
