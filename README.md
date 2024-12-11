@@ -12,3 +12,22 @@ TireTimeBot is Telegram bot designed to help drivers stay safe on the road by pr
 ## Workflow Diagram
 
 ![Workflow Diagram](./docs/assets/TireTimeBot.drawio.png)
+
+## How to run?
+
+*Prerequisites*:
+
+Make sure you have `.env` file in the root of the project with all environment variables listed in `compose.yaml`
+
+### docker compose
+
+```sh
+docker compose up
+```
+
+### manual setup with poetry
+
+```sh
+poetry install
+poetry run python main.py
+```

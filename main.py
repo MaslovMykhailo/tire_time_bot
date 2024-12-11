@@ -17,9 +17,9 @@ from database import DBEngine
 
 load_dotenv(override=True)
 
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-DB_URL = os.getenv("DB_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 def start_alerts_scheduler(check_for_alerts):
@@ -36,7 +36,7 @@ async def main() -> None:
     location_api = NominatimAPI()
     weather_forecast_api = WeatherAPI(WEATHER_API_KEY)
 
-    db_engine = DBEngine(DB_URL)
+    db_engine = DBEngine(DATABASE_URL)
     await db_engine.create_all()
 
     dp = Dispatcher(
