@@ -35,6 +35,9 @@ def check_for_alerts_factory(
     async def check_for_alerts():
         async_session = await db_session()
 
+        async for alert in get_alerts_to_resend(async_session):
+            await send_alert(alert)
+
         async for alert in get_alerts_to_check(async_session):
             chat = alert.chat
 
@@ -47,9 +50,6 @@ def check_for_alerts_factory(
                 continue
 
             await send_alert(alert, avg_temperature)
-
-        async for alert in get_alerts_to_resend(async_session):
-            await send_alert(alert)
 
     return check_for_alerts
 

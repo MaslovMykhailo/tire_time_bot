@@ -91,7 +91,7 @@ class ChatMessages:
         if alert_count == 0:
             return (
                 "👋 Hello!\n\n"
-                f"🌡️ According weather forecast the average temperature is {avg_temperature:.1f}°C for next week.\n\na"
+                f"🌡️ According weather forecast the average temperature is {avg_temperature:.1f}°C for next week.\n\n"
                 f"🚗 It's a good time to schedule an appointment to change {self.format_alert_type(alert_type)}."
             )
 
